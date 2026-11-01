@@ -1,119 +1,172 @@
 ---
 name: typescript-coding
-description: Write, review and refactor TypeScript on Node to a textbook standard - strict types with no any or non-null assertions, small single-purpose functions, intention-revealing names, layered separation of concerns (route, service, repository), DRY and SOLID applied to modules, async/await done right, and Vitest tests that exercise real behaviour instead of mocking the codebase. Use whenever writing, reviewing, or cleaning up TypeScript, JavaScript or Node code - new modules, Express or GraphQL handlers, repository functions, scripts, tests, or any diff showing any, as casts, the ! operator, forEach pushing into arrays, await inside loops, SQL or business rules in a controller, boolean flag parameters, copy-pasted validation blocks, or jest.mock of the project's own modules. Trigger on requests like "clean this up", "make this idiomatic", "modernize this", "is this good TypeScript", "looks sus", "review this", or "write a service/repository/handler for X", even when the user does not say TypeScript or Node.
+description: How to write TypeScript on Node in this codebase - the house standard for any TypeScript, JavaScript or Node work, from a one-line fix to a new service. Use it every time you write, change, review or test TypeScript - new modules, Express or Fastify handlers, GraphQL resolvers, repository functions, scripts, config, tests - even when the user only says "add a function", "fix this bug", "write the handler for X" or "clean this up" and never mentions TypeScript, style or quality. Also use it when reviewing a diff that shows any, as casts, the ! operator, enum, forEach pushing into arrays, await inside loops, SQL or business rules in a controller, boolean flag parameters, console.log, or vi.mock of the project's own modules. The refactoring sub-skill inside covers converting existing code safely.
 ---
 
-# Pristine Node TypeScript
+# Writing TypeScript on Node
 
-Produce TypeScript you would put in a textbook: correct, strict, small, named well,
-layered, and tested. The two reference files carry the depth; this file is the method.
+This is how TypeScript gets written here: strict types that prove the code, small named
+functions, one home for every rule, boundaries that parse, errors that travel to one
+handler, and tests that exercise behaviour. The standard is the same whether the task is
+a new service or a two-line fix; a small change still lands in a file that someone has
+to read tomorrow.
 
-- `references/best-practices.md`: the distilled canon (Effective TypeScript 2nd ed.,
-  the TypeScript handbook's Do's and Don'ts, the Google TypeScript Style Guide,
-  typescript-eslint strict-type-checked, the Node.js docs, Clean Code and SOLID
-  restated for modules and functions, Vitest guidance, Datadog log conventions). Read it before any substantial
-  piece of new code or review so recommendations match the sources, not folklore.
-- `references/worked-examples.md`: thirteen real before/after rewrites with the reasoning
-  that decided each. Read it when converting actual code; the shapes to hunt for are
-  named there.
+The body of this file is the standard in brief. The references carry the depth and the
+reasons; open them when the task touches their area.
 
-## Ground rules
-
-1. **Equivalence first.** Before changing anything, name what the old code does that
-   the new code must still do: evaluation order, which awaits ran in sequence, side
-   effects, distinct log lines, which errors escape and with what status. A rewrite that
-   turns sequential writes into `Promise.all`, or merges two different "not found"
-   branches, is a bug wearing a cleanup's clothes. When behaviour does change, verify it
-   is harmless and say so out loud, or keep the original shape.
-2. **The type system is the first test.** Strict mode on, no `any`, no `!`, no `as`
-   except `as const` and a commented cast at a verified boundary. `unknown` in, narrow
-   with a type guard or a zod schema, typed out. If the compiler cannot prove it, the
-   code has not shown it. A red squiggle you silence is a bug you scheduled.
-3. **One level of abstraction per function.** A function either orchestrates named steps
-   or does one step; never both. If a body needs a comment to separate its phases, each
-   phase is a function. Keep bodies around twenty lines, at most three parameters before
-   an options object, no boolean flags that switch behaviour.
-4. **Names carry the meaning the type cannot.** Functions are verbs
-   (`loadActivePrompt`, `markCriteriaRejected`), booleans read as predicates
-   (`isMultiUnit`, `hasPolicy`), collections are plural, and no abbreviation beyond
-   `id`, `url`, `db`. A name that needs a comment is wrong. Follow the repo's file
-   convention exactly; where there is none, `camelCase.kind.ts`.
-5. **Layers do not leak.** Routes and controllers parse, validate and map errors to HTTP;
-   services hold rules and transactions; repositories hold SQL and return rows mapped
-   once at the edge. No `req`/`res` below the controller, no SQL above the repository,
-   no business rules in either edge. Cross-cutting needs (clock, logger, db, fetch) are
-   passed in, not imported as singletons, so tests can supply their own.
-6. **DRY means one home for each piece of knowledge, not zero repetition.** Extract when
-   the same rule appears twice and would have to change together. Two blocks that look
-   alike but encode different decisions stay apart. Prefer a named helper over a flag.
-7. **Push work to the source.** An existence test over fetched rows is an `exists`
-   query. Filtering, counting and sorting belong in SQL when the data comes from SQL.
-8. **Tests prove behaviour, not wiring.** Test the public function, not its internals.
-   Never mock the project's own modules; inject the dependency and pass a fake. Mock only
-   the network edge. Repository functions get integration tests against the real
-   database. One behaviour per test, named as the sentence it proves.
-9. **Delete before you convert.** Dead branches, redundant checks the type already
-   proves, and arms subsumed by another arm come out first. The best refactor of
-   redundant code is removal.
-10. **Verify with the project's tools.** Lint, build and the tests scoped to the touched
-    code run green before the change is called safe.
-
-## The moves, by smell
-
-| Smell in the code | Move |
+| When the task involves | Read |
 |---|---|
-| `any`, `Record<string, any>`, `as SomeType` on a row or JSON | `unknown` plus a zod schema or type guard at the boundary, typed from there (example 1) |
-| `value!` or `as Foo` to silence a maybe-undefined | Narrow with a guard, or throw a typed `NotFoundError`; the `!` is `get()` on an Optional (example 2) |
-| Ladder of `if (!a) return; if (!a.b) return;` | `a?.b ?? fallback`; keep a guard only where the branch does something distinct, like logging (example 3) |
-| `forEach` pushing into an array; `reduce` building an object | `map`/`filter`/`flatMap`; `Object.groupBy`/`Map.groupBy`; `Object.fromEntries` (example 4) |
-| `await` inside a `for` over independent items | `Promise.all`; keep the loop when the items depend on each other or the pool is small (example 5) |
-| SQL, validation and rules in one handler | Controller, service, repository, with the transaction in the service (example 6) |
-| `doThing(x, true)`; string unions typed as `string` | Two functions or an options object; `as const` object plus derived union, exhaustive `switch` with a `never` check (example 7) |
-| `vi.mock('../src/...')` of the project's own module | Inject the dependency; test the real function with a fake collaborator (example 8) |
-| Same validate-and-400 block in every handler | One schema, one `parseBody` helper that throws a typed error the error middleware maps (example 9) |
-| A function with phases separated by blank lines or comments | Named steps at one level of abstraction (example 10) |
-| `.then().catch(err => logger.error(err))` | `async`/`await`; let it propagate to the layer that can act; wrap with `cause` (example 11) |
-| `console.log`, values interpolated into a log message, a log line with no message | Injected pino logger, constant message naming the event, values as fields (example 12) |
-| `(await repo.findAll(...)).length > 0` | An `exists` query (example 13) |
-| `enum` | `as const` object plus `typeof` union; type stripping and tree shaking both prefer it |
-| `null` flowing through internal code | `undefined` inside; map database `null` once at the repository edge |
-| `let` that is assigned once | `const` |
-| `require`, missing `node:` prefix, `process.env` outside config | ESM `import`, `node:fs/promises`, one config module that parses env with zod at startup |
+| Any non-trivial type, function, async flow or error path | `references/style.md` |
+| New modules, project layout, dependency wiring, config, logging, tsconfig, lint, security, shutdown | `references/architecture.md` |
+| Writing or changing tests, deciding what to fake, database or HTTP tests | `references/testing.md` |
+| Changing code that already works: cleanups, modernising, "make this a map" | `references/refactoring.md` (the refactoring sub-skill) |
 
-Types in one breath: infer locals, annotate every export and every function signature;
-`interface` for object shapes, `type` for unions and aliases; discriminated unions over
-bags of optional fields; `readonly` on arrays and parameters you do not mutate;
-`satisfies` to check a literal without widening it; narrow parameter types to what the
-function reads (`Pick<Property, 'id' | 'companyId'>`), widen return types never.
+## How to work
 
-Functions in one breath: pure where possible, side effects at the edges; early-return
-guards at the top, happy path unindented; no argument mutation; one return type, not a
-union of success shapes and `null`; a result union (`{ ok: true, value } | { ok: false,
-reason }`) when the caller must branch, a thrown typed error when it cannot recover.
+**Before writing.** Read the surrounding module and one neighbour to learn the repo's
+conventions: file naming, import style, how dependencies arrive, how errors are typed,
+which validator and logger are in use. The repo's convention wins over this document
+wherever they differ, because consistency inside a codebase is worth more than any single
+rule. Check the installed majors of TypeScript, Node, the validator and the test runner
+before using an API that changed between versions (see the version notes in each
+reference).
 
-Async in one breath: `async`/`await` everywhere, never `.then` chains; no floating
-promises, write `void` when you mean it; `Promise.all` for independent work,
-`Promise.allSettled` when partial failure is expected; `AbortSignal` for anything that
-can be cancelled; `await using` for resources that must close.
+**While writing.** Start from the types: the input shape, the output shape, the error
+cases. Then write the function so the compiler proves it. Keep each function at one level
+of abstraction, name things for what they mean, and put each piece of knowledge in one
+place. Parse at the boundary, trust inside. Let errors propagate to the one layer that
+can act on them.
 
-SOLID in one breath, for modules: a module exports one concern; add behaviour by adding a
-variant or a module and let the compiler find the switches; a function that accepts a
-type honours all of it; depend on the narrowest interface at the point of use; depend on
-what is passed in, not on what is imported.
+**Before calling it done.** Run the project's type check, lint and the tests that cover
+the touched code. Node runs TypeScript without checking it, so "it runs" is never
+evidence that it compiles. State what was verified and how; when something could not be
+verified, say so first.
 
-Logging in one breath: structured JSON through one injected pino logger; every line
-has `message`, a constant sentence naming the event, with values as fields so Datadog can
-group patterns and facet; `level` as a string, `timestamp` in ISO 8601, `service`, `env`,
-`version` on every line, `requestId` inside a request through a child logger; one line
-per event at the layer that owns it; secrets redacted at the logger.
+## The standard in brief
 
-Tests in one breath: Vitest, `describe` per function, `it` per behaviour named as a
-sentence; arrange, act, assert, with blank lines between; `it.each` for tables; fakes
-over mocks; the real database for repositories; coverage is a smoke alarm, not a target.
+### Types prove the code
 
-## Reporting the change
+- Strict mode on. No `any`; `unknown` for values not yet examined, narrowed by a guard,
+  `instanceof`, `in`, or a schema parse. `any` spreads through inference and switches
+  the checker off for everything it touches.
+- No non-null `!` and no `as` casts except `as const` and a commented cast at a verified
+  boundary. Both are unverified claims; a guard or an honest `T | undefined` is the fix.
+  `@ts-expect-error` with a reason for library bugs, never `@ts-ignore`.
+- Infer locals; annotate every exported function's parameters and return type. The
+  return annotation is documentation and catches drift when a branch is added.
+- Model states as discriminated unions, not bags of optional fields. Switch on the
+  discriminant and finish with `default: x satisfies never` so adding a variant lists
+  every place that must learn about it.
+- No `enum`, no `namespace` with values, no class parameter properties. Node's type
+  stripper cannot run them and `erasableSyntaxOnly` rejects them. Use an `as const`
+  object plus a derived union, or a plain string-literal union.
+- `satisfies` to check a literal without widening it. `readonly` on arrays and objects
+  the function does not mutate. Generics only when a type parameter relates two
+  positions; one used once is `unknown` in disguise.
+- `interface` for object shapes, `type` for unions and aliases. `import type` for
+  anything used only as a type, or Node throws at runtime.
+- Branded types for ids (`UserId`, `OrderId`) minted only at the boundary, so an
+  `OrderId` cannot be passed where a `UserId` is expected.
 
-State what changed and what was proven equal, in plain sentences. When a conversion was
-declined, give the specific blocker (sequential writes, distinct logging, a connection
-pool of five), not a vague preference. When behaviour differs in any observable way, that
-is the headline of the report, not a footnote. Name the tests that cover the change.
+### Nullability
+
+- `undefined` is the internal "absent". Database and JSON `null` are mapped to
+  `undefined` once, in the row mapper or schema. Internal code never checks both.
+- `??` for defaults, never `||`, unless `0`, `''` and `false` are meant to fall through.
+  `?.` chains replace guard ladders when every missing link means the same thing; a
+  guard that does something distinct, like logging, stays.
+- `noUncheckedIndexedAccess` is on, so `arr[0]` and `record[key]` are `T | undefined`.
+  Handle it with a guard, a default or `.at()`, never `!`.
+
+### Functions and names
+
+- One level of abstraction per function: it orchestrates named steps or it is a step.
+  A body that needs section comments is several functions. Around twenty lines is the
+  signal to look for the seam.
+- Guards first, early return, happy path at the shallowest indent. At most three
+  positional parameters, then an options object. A boolean parameter that switches
+  behaviour is two functions.
+- No argument mutation; `toSorted`, `toReversed`, `with`, spread. Pure functions in the
+  middle, side effects at the edges.
+- One shape of return. A result union (`{ ok: true, value } | { ok: false, error }`)
+  when the caller must branch on an expected outcome; a thrown typed error when it
+  cannot recover. A function does one or the other, never both.
+- Functions are verbs that state the effect (`loadActivePrompt`, `toPolicyRow`);
+  booleans read as predicates (`isMultiUnit`, `hasPolicy`); collections are plural; a
+  `Map` is named by what it indexes (`policiesByPropertyId`). No abbreviations beyond
+  `id`, `url`, `db`, `req`, `res`, `ctx`. Comments say why, never what.
+
+### Modules and layers
+
+- Follow the repo's layout. For a new one: package by feature, with routes, service,
+  repository, schema and tests side by side inside the feature folder. Buckets named
+  `controllers/`, `services/` at the top level suit only a small app.
+- Dependency direction is one way: route, controller, service, repository, db. Routes
+  and controllers parse, validate and map errors to HTTP. Services hold rules and own
+  the transaction. Repositories hold SQL and return rows mapped once at the edge. No
+  `req`/`res` below the controller, no SQL above the repository.
+- Dependencies arrive as parameters. Services are factory functions taking a `deps`
+  object typed as the narrowest interface they use; one composition root (`app.ts`)
+  builds the graph. No module-level singletons (`export const db = createPool()`), no
+  decorator-based DI. This is what makes tests possible without mocking modules.
+- Named exports only; no default exports; no internal `index.ts` barrel files. Import
+  the concrete file with its extension (`./orders.service.ts`, or `.js` in a repo that
+  emits that way), never bare `./orders.service`.
+- `process.env` is read in one config module, parsed with a schema at startup, and
+  exported as a frozen typed object. A missing variable fails the boot, not a request.
+- Built-ins with the `node:` prefix. Built-in `fetch`, `AbortSignal`, `structuredClone`,
+  `Array.fromAsync`, `Object.groupBy`; no `axios`, `node-fetch` or `lodash` for what
+  the platform does.
+
+### Boundaries, errors and async
+
+- Parse, do not validate: at every trust boundary (HTTP body, query and params, env,
+  queue messages, third-party responses, raw SQL rows) a schema parse returns the typed
+  value and `z.infer` is the only source of the type. `safeParse` at the HTTP edge,
+  `parse` at startup. Never write the interface and the schema separately.
+- Errors are classes extending `Error` with `name` set and `cause` when wrapping.
+  Throw only `Error` subclasses. `catch (e)` gives `unknown`; narrow it. Expected
+  failures are mapped to a response; unknown ones are logged once and, when the
+  process state is unreliable, the process exits and the orchestrator restarts it.
+- Domain errors cross layers as typed classes and are mapped to HTTP in exactly one
+  place, the error handler, as RFC 9457 problem details. Controllers never write
+  `res.status(404)` by hand. Never leak stack traces or SQL to the client.
+- `async`/`await` everywhere. No floating promises: await, return, or
+  `void p.catch(log)` with a reason. `return await` inside `try`. `Promise.all` for
+  independent work, `Promise.allSettled` when partial failure is expected, bounded
+  concurrency (`p-limit`) over user-sized input, sequential when items depend on each
+  other or the pool is small. `AbortSignal.timeout` for timeouts, never `Promise.race`.
+- Nothing synchronous and slow after startup: no `*Sync` fs or crypto calls, no
+  unbounded `JSON.parse` of request bodies, no regex on unbounded untrusted input.
+  The event loop is shared by every request.
+
+### Logging
+
+One structured pino logger, created once and injected. Every line has a constant
+`message` naming the event and the values as fields, so the log platform can group
+patterns and facet: `logger.info({ propertyId, durationMs }, 'screening extraction
+completed')`. `requestId` through a child logger. Log once per event at the layer that
+owns it; failures are logged by the error handler, once. Secrets redacted at the logger.
+`console.*` never appears in `src/`.
+
+### Tests
+
+Vitest. `describe` per unit, `it` named as the behaviour it proves in plain present
+tense. Arrange, act, assert. Fakes over mocks: pass a two-line fake through the `deps`
+parameter; never `vi.mock` a module under `src/`. Mock only the network edge, with MSW
+set to fail on unhandled requests. Repositories are tested against a real database in a
+container. A test that cannot fail is deleted. Details in `references/testing.md`.
+
+## Refactoring existing code
+
+Changing code that already works is its own discipline: equivalence first, delete before
+converting, one move per smell, verified with the project's tests. The smell-to-move table
+and worked examples live in `references/refactoring.md`. Read it whenever the task is a
+cleanup, a modernisation or a review of someone else's diff.
+
+## Reporting the work
+
+State what was built or changed and what was verified, in plain sentences. Name the tests
+that cover it. When a decision went against this standard because the repo does it
+differently, say so in one line. When behaviour changed in any observable way, that is the
+headline, not a footnote.
