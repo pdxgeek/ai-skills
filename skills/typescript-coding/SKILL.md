@@ -1,5 +1,5 @@
 ---
-name: pristine-node-typescript
+name: typescript-coding
 description: Write, review and refactor TypeScript on Node to a textbook standard - strict types with no any or non-null assertions, small single-purpose functions, intention-revealing names, layered separation of concerns (route, service, repository), DRY and SOLID applied to modules, async/await done right, and Vitest tests that exercise real behaviour instead of mocking the codebase. Use whenever writing, reviewing, or cleaning up TypeScript, JavaScript or Node code - new modules, Express or GraphQL handlers, repository functions, scripts, tests, or any diff showing any, as casts, the ! operator, forEach pushing into arrays, await inside loops, SQL or business rules in a controller, boolean flag parameters, copy-pasted validation blocks, or jest.mock of the project's own modules. Trigger on requests like "clean this up", "make this idiomatic", "modernize this", "is this good TypeScript", "looks sus", "review this", or "write a service/repository/handler for X", even when the user does not say TypeScript or Node.
 ---
 

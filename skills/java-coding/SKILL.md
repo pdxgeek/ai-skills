@@ -1,5 +1,5 @@
 ---
-name: pristine-modern-java
+name: java-coding
 description: Refactor and write modern Java (17+) using stream pipelines, disciplined Optional chains, records, and var. Use whenever writing, reviewing, or cleaning up Java code - converting null-check-and-early-return code to chains, replacing loops or CollectionUtils.isEmpty checks, introducing records for multi-value results, or deciding where var belongs. Trigger on requests like "make this a stream", "clean this up", "modernize this", "looks sus", or any Java diff showing orElse(null), isPresent()/get(), guard clauses before chains, or hand-rolled tuples, even when the user does not say "refactor".
 ---
 
