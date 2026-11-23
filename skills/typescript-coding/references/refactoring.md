@@ -37,6 +37,7 @@ Contents: Method · The moves, by smell · Worked examples · Reporting
 
 | Smell in the code | Move |
 |---|---|
+| A step that ends by calling the next step, so the flow is a chain of small methods | An orchestrator that calls each step in turn; every step returns to it |
 | `any`, `Record<string, any>`, `as SomeType` on a row or JSON | `unknown` plus a schema or type guard at the boundary, typed from there (example 1) |
 | `value!` or `as Foo` to silence a maybe-undefined | Narrow with a guard, or throw a typed `NotFoundError` (example 2) |
 | Ladder of `if (!a) return; if (!a.b) return;` | `a?.b ?? fallback`; keep a guard only where the branch does something distinct (example 3) |
@@ -326,7 +327,9 @@ lose the status code too.
 
 ### 10. One level of abstraction
 
-Hunt for: a function whose body is phases separated by blank lines or `// Step 2`.
+Hunt for: a function whose body is phases separated by blank lines or `// Step 2`. Hunt
+also for the chained form, where the phases already became functions that each end by
+calling the next one; the move is the same and the orchestrator below is the result.
 
 ```ts
 // Before: 70 lines, four phases, three levels of nesting

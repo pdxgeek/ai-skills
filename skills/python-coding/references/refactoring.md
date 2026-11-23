@@ -33,6 +33,7 @@ Contents: Method · The moves, by smell · Worked examples · Reporting
 
 | Smell in the code | Move |
 |---|---|
+| A step that ends by calling the next step, so the flow is a chain of small methods | An orchestrator that calls each step in turn; every step returns to it |
 | `Any`, `dict[str, Any]`, `cast(Foo, row)` on a row or JSON | pydantic model or dataclass mapper at the boundary, typed from there (example 1) |
 | `assert x is not None`, `x  # type: ignore`, `Optional` unwrapped by hope | Guard that raises a typed error or returns (example 2) |
 | `if a and a.b and a.b.c:` ladder; `try: x = d["k"] except KeyError: x = None` | Narrow once with a walrus guard; `d.get("k")`; keep a guard only where it does something distinct (example 3) |
@@ -208,7 +209,8 @@ error at the `assert_never` when a variant is added to the union.
 ### 10. One level of abstraction
 
 Found: a forty-line `process_upload` with phases marked `# parse`, `# validate`, `# save`,
-`# notify`.
+`# notify`. Or the chained form: `_parse` ends by calling `_validate`, which ends by
+calling `_save`, which ends by calling `_notify`, so the flow lives in no single place.
 
 Move: `parsed = _parse(upload)`, `_validate(parsed)`, `saved = await
 _save(parsed)`, `await _notify(saved)`; the orchestrator is four lines and each step has

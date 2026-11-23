@@ -98,9 +98,10 @@ something could not be verified, say so first.
 
 ### Functions and names
 
-- One level of abstraction per function: it orchestrates named steps or it is a step. A
-  body that needs section comments is several functions. Around twenty lines is the
-  signal to look for the seam.
+- One level of abstraction per function: it orchestrates named steps or it is a step.
+  The orchestrator calls each step in turn and every step returns to it; a step never
+  ends by calling the next step. A body that needs section comments is several
+  functions. Around twenty lines is the signal to look for the seam.
 - Guards first, early return, happy path at the shallowest indent. At most three
   positional parameters, then keyword-only (`*,`). A boolean parameter that switches
   behaviour is two functions.

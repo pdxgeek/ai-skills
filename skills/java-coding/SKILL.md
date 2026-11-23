@@ -104,8 +104,9 @@ first.
 ### Methods and names
 
 - One level of abstraction per method; a method either orchestrates named steps or is a
-  step. A body that needs section comments is several methods. Guards first, happy path
-  unindented, at most two levels of nesting.
+  step. The orchestrator calls each step in turn and every step returns to it; a step
+  never ends by calling the next step. A body that needs section comments is several
+  methods. Guards first, happy path unindented, at most two levels of nesting.
 - Constructors with more than about five collaborators mean the class has several jobs.
 - Google Java Style: 100 columns, braces always, no wildcard imports, `@Override`
   wherever legal, acronyms as words (`HttpClient`, `getXmlUrl`), `UPPER_SNAKE` only for

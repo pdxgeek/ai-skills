@@ -113,6 +113,29 @@ Async · Performance
 
 - One level of abstraction: a function orchestrates named steps or is one step. Blank
   lines separating phases, or a comment saying `# now save`, are the signal to extract.
+- Orchestrate, do not chain. When a long body is split into steps, one method calls the steps in order and
+  each step returns its result to it. In a chain, where the parse step calls the validate
+  step, which calls the save step, which calls the notify step, the code reads as four
+  methods but behaves as one: the flow is scattered across every method, no step can be
+  called or tested without the steps after it, and adding a step means editing the step
+  before it. The orchestrator is the only method that knows the order, and each step has
+  a signature that says what it needs and what it gives back.
+
+  ```python
+  # Chain: _validate() ends by calling _save(), which ends by calling _notify()
+  async def _validate(parsed: Parsed) -> None:
+      _check_invariants(parsed)
+      await _save(parsed)
+
+  # Orchestrator: the flow is in one place and each step returns
+  async def ingest(upload: Upload) -> Screening:
+      parsed = _parse(upload)
+      _validate(parsed)
+      saved = await _save(parsed)
+      await _notify(saved)
+      return saved
+  ```
+
 - Guards first (`if not items: return []`), early return, happy path at the shallowest
   indent. Nesting beyond two levels is a seam.
 - Parameters: at most three positional; the rest keyword-only after `*`. Positional-only

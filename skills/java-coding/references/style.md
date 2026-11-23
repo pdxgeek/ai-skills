@@ -316,7 +316,29 @@ channel and may be muted only when the name and initializer carry the load.
   `Map.entry`); avoid for production constants from other classes unless the class is
   obvious (`Math.max`); never for a method whose name is ambiguous out of context.
 - Method length: one screen, around twenty to thirty lines, one level of abstraction;
-  extract when a comment is needed to label a block. A service with more than about five
+  extract when a comment is needed to label a block.
+- Orchestrate, do not chain. When a long body is split into steps, one method calls the steps in order and
+  each step returns its result to it. In a chain, where the parse step calls the validate
+  step, which calls the save step, which calls the notify step, the code reads as four
+  methods but behaves as one: the flow is scattered across every method, no step can be
+  called or tested without the steps after it, and adding a step means editing the step
+  before it. The orchestrator is the only method that knows the order, and each step has
+  a signature that says what it needs and what it gives back.
+
+  ```java
+  // Chain: validate() ends by calling save(), which ends by calling notify()
+  private void validate(Parsed parsed) { checkInvariants(parsed); save(parsed); }
+
+  // Orchestrator: the flow is in one place and each step returns
+  public Screening ingest(Upload upload) {
+    var parsed = parse(upload);
+    validate(parsed);
+    var saved = save(parsed);
+    notify(saved);
+    return saved;
+  }
+  ```
+ A service with more than about five
   dependencies or three to four hundred lines is a candidate to split by use case.
 - Utility classes are `final` with a `private` constructor (item 4), hold only static
   members, and are named by noun (`Durations`, `JsonCodec`). `*Util` and `*Helper` grow

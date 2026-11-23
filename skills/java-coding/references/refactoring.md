@@ -45,6 +45,7 @@ Contents: Method · The moves, by smell · Worked examples · Reporting
 
 | Smell in the code | Move |
 |---|---|
+| A step that ends by calling the next step, so the flow is a chain of small methods | An orchestrator that calls each step in turn; every step returns to it |
 | `findOne(...).orElse(null)` then null check | `map`/`filter`/`flatMap` chain (example 1) |
 | Null guard on a value the next line wraps anyway | Start from `Optional.ofNullable(x)` (examples 2, 5) |
 | Two early returns, one of them logs | `.or(() -> { log...; return Optional.empty(); })` or keep the guard; never merge distinct empties silently (example 3) |
