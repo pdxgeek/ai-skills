@@ -19,6 +19,7 @@ reasons; open them when the task touches their area.
 | Any non-trivial type, function, async flow or error path | `references/style.md` |
 | New modules, project layout, dependency wiring, config, logging, tsconfig, lint, security, shutdown | `references/architecture.md` |
 | Writing or changing tests, deciding what to fake, database or HTTP tests | `references/testing.md` |
+| Choosing a database, queue, cache, HTTP client, library or AWS service | `references/stack.md` |
 | Changing code that already works: cleanups, modernising, "make this a map" | `references/refactoring.md` (the refactoring sub-skill) |
 
 ## How to work
@@ -29,7 +30,8 @@ which validator and logger are in use. The repo's convention wins over this docu
 wherever they differ, because consistency inside a codebase is worth more than any single
 rule. Check the installed majors of TypeScript, Node, the validator and the test runner
 before using an API that changed between versions (see the version notes in each
-reference).
+reference). Pick every dependency from `references/stack.md`; a library that is not
+on that list needs a one-line reason in the pull request.
 
 **While writing.** Start from the types: the input shape, the output shape, the error
 cases. Then write the function so the compiler proves it. Keep each function at one level

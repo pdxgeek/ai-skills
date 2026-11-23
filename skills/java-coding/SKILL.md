@@ -19,6 +19,7 @@ reasons; open them when the task touches their area.
 | Any non-trivial method: streams, Optional, records, sealed types, switch, exceptions, null, collections, naming | `references/style.md` |
 | Spring wiring, package layout, transactions, config, JPA, error responses, logging, the JDK (jolta), build tooling | `references/architecture.md` |
 | Writing or changing tests, deciding what to mock, slices, Testcontainers | `references/testing.md` |
+| Choosing a database, queue, cache, HTTP client, library or AWS service | `references/stack.md` |
 | Changing code that already works: cleanups, "make this a stream", modernising | `references/refactoring.md` (the refactoring sub-skill) |
 
 ## How to work
@@ -30,7 +31,8 @@ convention wins over this document wherever they differ. Check the Java and Spri
 versions in the build file before using an API that changed between releases: pattern
 matching for switch needs 21, `ScopedValue` is final only from 25, `StructuredTaskScope`
 is still preview in 25, and Spring Boot 4 renamed starters and moved Jackson to
-`tools.jackson`.
+`tools.jackson`. Pick every dependency from `references/stack.md`; a library that is not
+on that list needs a one-line reason in the pull request.
 
 **While writing.** Start from the data: which values are immutable records, which states
 are a sealed hierarchy, where null is legitimate. Then write methods that read as a

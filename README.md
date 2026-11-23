@@ -21,6 +21,7 @@ skills/<name>/
   references/style.md         # types, data, functions, errors, async
   references/architecture.md  # layout, wiring, config, database, HTTP, logging, tooling
   references/testing.md       # what to fake, what to run for real, test shape
+  references/stack.md         # preferred libraries, databases, queues, AWS services; and what not to use
   references/refactoring.md   # the sub-skill for changing code that already works
 ```
 
@@ -46,6 +47,23 @@ cp -R skills/python-coding /path/to/repo/.claude/skills/
 
 A repository copy wins over this repo when they drift; sync it back here when a rule
 changes.
+
+## The preferred stack
+
+`references/stack.md` in each skill is the list of default picks, keyed by need: Postgres
+for relational data, SQS for queues, SNS for fan-out, Caffeine for a Java in-process
+cache, and so on. Each pick is proven: widely deployed, maintained by an organisation,
+stable API, long release history. The repo's existing choice wins where it differs, and a
+library not on the list needs a one-line reason in the pull request.
+
+The list will grow. To add a pick:
+
+- Add one row to the table that owns the need, with the reason in the Notes column. A
+  pick with no reason gets argued with.
+- When the pick is replacing something, add a row to **Not this** saying what and why.
+- The **Platform** table is shared across all three skills and stays identical. Change it
+  in every `stack.md` in the same commit.
+- Keep `SKILL.md` untouched; it already points at `stack.md`.
 
 ## Writing a new skill
 

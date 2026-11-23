@@ -19,6 +19,7 @@ reasons; open them when the task touches their area.
 | Any non-trivial type, function, async flow, error path, match statement | `references/style.md` |
 | New modules, project layout, dependency wiring, config, database, FastAPI, logging, uv/ruff/mypy, shutdown | `references/architecture.md` |
 | Writing or changing tests, deciding what to fake, database or HTTP tests | `references/testing.md` |
+| Choosing a database, queue, cache, HTTP client, library or AWS service | `references/stack.md` |
 | Changing code that already works: cleanups, modernising, "make this a comprehension" | `references/refactoring.md` (the refactoring sub-skill) |
 
 ## How to work
@@ -28,7 +29,8 @@ conventions: layout, how dependencies arrive, which validator, ORM and logger ar
 use, how errors reach the client. The repo's convention wins over this document
 wherever they differ. Check `requires-python` and the installed majors of pydantic,
 SQLAlchemy, FastAPI and pytest before using an API that changed between versions (see
-the version notes in each reference).
+the version notes in each reference). Pick every dependency from `references/stack.md`; a library that is not
+on that list needs a one-line reason in the pull request.
 
 **While writing.** Start from the types: the input shape, the output shape, the error
 cases. Then write the function so the checker proves it. One level of abstraction per
